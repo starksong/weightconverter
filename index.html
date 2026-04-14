@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業重量轉換工具 (含記錄功能)</title>
+    <title>Professional Weight Converter</title>
     <style>
         :root {
             --primary-color: #007aff;
@@ -25,7 +25,7 @@
             width: 100%;
             max-width: 450px;
         }
-        h2 { text-align: center; color: #1d1d1f; margin-bottom: 20px; }
+        h2 { text-align: center; color: #1d1d1f; margin-bottom: 25px; letter-spacing: -0.5px; }
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -63,60 +63,61 @@
             align-items: center;
             margin-bottom: 10px;
             border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
+            padding-bottom: 8px;
         }
-        .history-header h3 { font-size: 16px; color: #333; margin: 0; }
-        .btn-del-all { font-size: 12px; color: #007aff; background: none; padding: 0; width: auto; cursor: pointer; }
+        .history-header h3 { font-size: 15px; color: #1d1d1f; margin: 0; }
+        .btn-del-all { font-size: 12px; color: #007aff; background: none; padding: 0; width: auto; cursor: pointer; border-radius: 0; }
+        .btn-del-all:hover { text-decoration: underline; }
 
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { text-align: left; color: #86868b; padding: 8px; border-bottom: 1px solid #f0f0f0; }
-        td { padding: 10px 8px; border-bottom: 1px solid #f9f9f9; color: #333; }
-        .record-time { color: #ccc; font-size: 11px; }
+        th { text-align: left; color: #86868b; padding: 10px 8px; border-bottom: 1px solid #f0f0f0; font-weight: 500; }
+        td { padding: 12px 8px; border-bottom: 1px solid #f9f9f9; color: #333; }
+        .record-time { color: #86868b; font-size: 11px; text-align: right; }
         tr:first-child td { font-weight: bold; color: var(--primary-color); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>重量轉換工具</h2>
+    <h2>Weight Converter</h2>
     
     <div class="grid">
         <div class="input-group">
-            <label>公斤 (KG)</label>
-            <input type="number" id="kg" placeholder="0" oninput="handleInput('kg')">
+            <label>Kilograms (KG)</label>
+            <input type="number" id="kg" placeholder="0.00" oninput="handleInput('kg')">
         </div>
         <div class="input-group">
-            <label>磅 (LB)</label>
-            <input type="number" id="lb" placeholder="0" oninput="handleInput('lb')">
+            <label>Pounds (LB)</label>
+            <input type="number" id="lb" placeholder="0.00" oninput="handleInput('lb')">
         </div>
     </div>
 
     <div class="grid">
         <div class="input-group">
-            <label>克 (G)</label>
+            <label>Grams (G)</label>
             <input type="number" id="g" placeholder="0" oninput="handleInput('g')">
         </div>
         <div class="input-group">
-            <label>盎司 (OZ)</label>
-            <input type="number" id="oz" placeholder="0" oninput="handleInput('oz')">
+            <label>Ounces (OZ)</label>
+            <input type="number" id="oz" placeholder="0.00" oninput="handleInput('oz')">
         </div>
     </div>
 
     <div class="button-group">
-        <button class="btn-clear" onclick="clearInputs()">清空輸入</button>
+        <button class="btn-clear" onclick="clearInputs()">Clear All Fields</button>
     </div>
 
     <div class="history-section">
         <div class="history-header">
-            <h3>最近轉換記錄 (最多10條)</h3>
-            <button class="btn-del-all" onclick="clearHistory()">清空記錄</button>
+            <h3>Recent Activity (Max 10)</h3>
+            <button class="btn-del-all" onclick="clearHistory()">Clear History</button>
         </div>
         <table id="historyTable">
             <thead>
                 <tr>
-                    <th>公斤 (KG)</th>
-                    <th>磅 (LB)</th>
-                    <th>時間</th>
+                    <th>KG</th>
+                    <th>LB</th>
+                    <th style="text-align: right;">Time</th>
                 </tr>
             </thead>
             <tbody id="historyBody">
@@ -129,7 +130,6 @@
     const units = { kg: 1000, g: 1, lb: 453.59237, oz: 28.34952 };
     let history = JSON.parse(localStorage.getItem('weightHistory')) || [];
 
-    // 初始化顯示記錄
     updateHistoryTable();
 
     let timer;
@@ -143,7 +143,6 @@
         const amount = parseFloat(value);
         const grams = amount * units[source];
 
-        // 更新界面上所有的數值
         for (let unit in units) {
             if (unit !== source) {
                 const result = grams / units[unit];
@@ -151,11 +150,10 @@
             }
         }
 
-        // 設置防抖，停止輸入 800 毫秒後才保存記錄，避免產生過多碎記錄
         clearTimeout(timer);
         timer = setTimeout(() => {
             saveRecord();
-        }, 800);
+        }, 1000); 
     }
 
     function saveRecord() {
@@ -165,14 +163,11 @@
         if (!kg || !lb) return;
 
         const now = new Date();
-        const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         const newRecord = { kg, lb, time: timeStr };
-
-        // 插入到數組開頭
         history.unshift(newRecord);
 
-        // 只保留最近 10 條
         if (history.length > 10) {
             history = history.slice(0, 10);
         }
@@ -185,8 +180,8 @@
         const body = document.getElementById('historyBody');
         body.innerHTML = history.map(item => `
             <tr>
-                <td>${item.kg}</td>
-                <td>${item.lb}</td>
+                <td>${item.kg} kg</td>
+                <td>${item.lb} lb</td>
                 <td class="record-time">${item.time}</td>
             </tr>
         `).join('');
@@ -200,7 +195,7 @@
     }
 
     function clearHistory() {
-        if(confirm("確定要刪除所有歷史記錄嗎？")) {
+        if(confirm("Are you sure you want to delete all history?")) {
             history = [];
             localStorage.removeItem('weightHistory');
             updateHistoryTable();
